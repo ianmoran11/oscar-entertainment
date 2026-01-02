@@ -11,6 +11,7 @@ export type Playlist = {
     id: string
     name: string
     videos: VideoSource[]
+    youtubePlaylistId?: string
 }
 
 export type QuizType = 'phonetics' | 'math'
@@ -32,6 +33,8 @@ interface SettingsState {
   deletePlaylist: (id: string) => void
   updatePlaylistName: (id: string, name: string) => void
   setActivePlaylist: (id: string) => void
+  setPlaylistYoutubeId: (id: string, youtubeId: string | undefined) => void
+  setPlaylistVideos: (id: string, videos: VideoSource[]) => void
 
   // Video Actions
   addVideo: (url: string, title?: string, id?: string) => void
@@ -107,6 +110,12 @@ export const useStore = create<Store>()(
           playlists: state.playlists.map(p => p.id === id ? { ...p, name } : p)
       })),
       setActivePlaylist: (id) => set({ activePlaylistId: id, currentVideoIndex: 0 }),
+      setPlaylistYoutubeId: (id, youtubePlaylistId) => set(state => ({
+          playlists: state.playlists.map(p => p.id === id ? { ...p, youtubePlaylistId } : p)
+      })),
+      setPlaylistVideos: (id, videos) => set(state => ({
+          playlists: state.playlists.map(p => p.id === id ? { ...p, videos } : p)
+      })),
 
       // Video Actions
       addVideo: (url, title, manualId) => set(state => {

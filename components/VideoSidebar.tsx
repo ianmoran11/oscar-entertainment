@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useStore } from '@/store/useStore'
 import { getYouTubeID } from '@/lib/utils'
-import { ChevronLeft, ChevronRight, Clock, PlayCircle, MonitorPlay } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Clock, PlayCircle, MonitorPlay, Settings } from 'lucide-react'
 
 export function VideoSidebar() {
     const { 
@@ -123,6 +124,17 @@ export function VideoSidebar() {
                             </button>
                         )
                     })}
+                </div>
+
+                {/* Settings Link */}
+                <div className="pt-3 mt-2 border-t border-white/10">
+                    <Link 
+                        href="/settings"
+                        className="flex items-center gap-3 w-full p-2.5 rounded-lg text-slate-400 hover:bg-white/10 hover:text-white transition-all group"
+                    >
+                        <Settings className="w-5 h-5 group-hover:rotate-45 transition-transform duration-500" />
+                        <span className="font-medium">Settings</span>
+                    </Link>
                 </div>
             </div>
         </div>

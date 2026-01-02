@@ -1,8 +1,8 @@
 'use client'
 
-import { useStore } from '@/store/useStore'
+import { useStore, VideoSource } from '@/store/useStore'
 import { getYouTubeID } from '@/lib/utils'
-import { Trash2, Plus, ArrowLeft, Loader2, Key, LayoutList, FolderPlus } from 'lucide-react'
+import { Trash2, Plus, ArrowLeft, Loader2, Key, LayoutList, FolderPlus, RefreshCw, Link as LinkIcon, Unlink, Youtube } from 'lucide-react'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 
@@ -14,6 +14,8 @@ export default function SettingsPage() {
     addPlaylist,
     deletePlaylist,
     setActivePlaylist, // Use this for switching context
+    setPlaylistYoutubeId,
+    setPlaylistVideos,
     addVideo, 
     addVideos,
     removeVideo,
@@ -30,6 +32,9 @@ export default function SettingsPage() {
   const [newUrl, setNewUrl] = useState('')
   const [newPlaylistName, setNewPlaylistName] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [showLinkInput, setShowLinkInput] = useState(false)
+  const [linkUrl, setLinkUrl] = useState('')
 
   const activePlaylist = playlists.find(p => p.id === activePlaylistId)
   const videos = activePlaylist?.videos || []
@@ -54,6 +59,67 @@ export default function SettingsPage() {
       }
   }
 
+  const fetchPlaylistVideos = async (playlistId: string): Promise<VideoSource[]> => {
+      const res = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${youtubeApiKey}`)
+      const data = await res.json()
+      
+      if (data.error) {
+          throw new Error(data.error.message)
+      } 
+      
+      if (data.items) {
+          return data.items
+              .filter((item: any) => item.snippet.title !== 'Private video' && item.snippet.title !== 'Deleted video')
+              .map((item: any) => ({
+                  id: item.snippet.resourceId.videoId,
+                  url: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
+                  title: item.snippet.title
+              }))
+      }
+      return []
+  }
+
+  const handleSyncPlaylist = async () => {
+      if (!activePlaylist?.youtubePlaylistId || !youtubeApiKey) return
+      
+      setIsSyncing(true)
+      try {
+          const videos = await fetchPlaylistVideos(activePlaylist.youtubePlaylistId)
+          if (confirm(`Found ${videos.length} videos. This will replace the current videos in this playlist. Continue?`)) {
+              setPlaylistVideos(activePlaylistId, videos)
+          }
+      } catch (e: any) {
+          alert(`Sync failed: ${e.message}`)
+      } finally {
+          setIsSyncing(false)
+      }
+  }
+
+  const handleLinkPlaylist = async (e: React.FormEvent) => {
+      e.preventDefault()
+      const playlistMatch = linkUrl.match(/[&?]list=([^&]+)/i)
+      const playlistId = playlistMatch ? playlistMatch[1] : linkUrl // Fallback to raw ID if no match
+
+      if (playlistId) {
+          setPlaylistYoutubeId(activePlaylistId, playlistId)
+          setLinkUrl('')
+          setShowLinkInput(false)
+          
+          // Optionally auto-sync
+          if (confirm('Playlist linked! Do you want to sync videos now?')) {
+               setIsSyncing(true)
+               try {
+                   const videos = await fetchPlaylistVideos(playlistId)
+                   setPlaylistVideos(activePlaylistId, videos)
+               } catch (e: any) {
+                   alert(`Sync failed: ${e.message}`)
+               } finally {
+                   setIsSyncing(false)
+               }
+          }
+      }
+  }
+
   const handleAddVideo = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newUrl) return
@@ -66,24 +132,9 @@ export default function SettingsPage() {
         const playlistId = playlistMatch ? playlistMatch[1] : null
 
         if (playlistId && youtubeApiKey) {
-            // Fetch Playlist Logic
-            const res = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${youtubeApiKey}`)
-            const data = await res.json()
-            
-            if (data.error) {
-                alert(`YouTube API Error: ${data.error.message}`)
-            } else if (data.items) {
-                const newVideos = data.items
-                    .filter((item: any) => item.snippet.title !== 'Private video' && item.snippet.title !== 'Deleted video')
-                    .map((item: any) => ({
-                        id: item.snippet.resourceId.videoId,
-                        url: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
-                        title: item.snippet.title
-                    }))
-                
-                addVideos(newVideos)
-                setNewUrl('')
-            }
+            const videos = await fetchPlaylistVideos(playlistId)
+            addVideos(videos)
+            setNewUrl('')
         } else {
             // Single Video
             const id = getYouTubeID(newUrl)
@@ -190,10 +241,77 @@ export default function SettingsPage() {
 
         {/* Video Management (Active Playlist) */}
         <section className="space-y-4 pt-4 border-t border-slate-800">
-          <div className="flex justify-between items-end">
-             <h2 className="text-xl font-semibold opacity-80">
-                Videos in <span className="text-blue-400">"{activePlaylist?.name}"</span>
-             </h2>
+          <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-end">
+             <div className="space-y-2">
+                 <h2 className="text-xl font-semibold opacity-80">
+                    Videos in <span className="text-blue-400">"{activePlaylist?.name}"</span>
+                 </h2>
+                 
+                 {/* ID Sync Controls */}
+                 <div className="flex items-center gap-3">
+                     {activePlaylist?.youtubePlaylistId ? (
+                         <div className="flex items-center gap-2 bg-blue-900/30 text-blue-300 px-3 py-1.5 rounded-full text-xs font-medium border border-blue-500/30">
+                             <Youtube size={14} />
+                             <span>Linked</span>
+                             <div className="w-px h-3 bg-blue-500/30 mx-1" />
+                             <button 
+                                 onClick={handleSyncPlaylist}
+                                 disabled={isSyncing}
+                                 className="hover:text-white flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                                 title="Sync with YouTube Playlist"
+                             >
+                                 <RefreshCw size={12} className={isSyncing ? "animate-spin" : ""} />
+                                 {isSyncing ? "Syncing..." : "Sync"}
+                             </button>
+                             <div className="w-px h-3 bg-blue-500/30 mx-1" />
+                             <button 
+                                 onClick={() => {
+                                     if(confirm('Unlink this playlist from YouTube?')) {
+                                         setPlaylistYoutubeId(activePlaylistId, undefined)
+                                     }
+                                 }}
+                                 className="hover:text-red-300 transition-colors"
+                                 title="Unlink"
+                             >
+                                 <Unlink size={12} />
+                             </button>
+                         </div>
+                     ) : (
+                         !showLinkInput ? (
+                             <button 
+                                 onClick={() => setShowLinkInput(true)}
+                                 className="text-xs flex items-center gap-1.5 text-slate-400 hover:text-blue-400 transition-colors"
+                             >
+                                 <LinkIcon size={12} /> Link YouTube Playlist
+                             </button>
+                         ) : (
+                             <form onSubmit={handleLinkPlaylist} className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2">
+                                 <input 
+                                     type="text" 
+                                     placeholder="YouTube Playlist URL or ID" 
+                                     value={linkUrl}
+                                     onChange={(e) => setLinkUrl(e.target.value)}
+                                     autoFocus
+                                     className="bg-slate-800 border border-slate-600 rounded px-2 py-1 text-xs w-48 focus:outline-none focus:border-blue-500"
+                                 />
+                                 <button 
+                                     type="submit"
+                                     className="text-xs bg-blue-600 px-2 py-1 rounded hover:bg-blue-500"
+                                 >
+                                     Link
+                                 </button>
+                                 <button 
+                                     type="button"
+                                     onClick={() => setShowLinkInput(false)}
+                                     className="text-xs text-slate-400 hover:text-slate-200"
+                                 >
+                                     Cancel
+                                 </button>
+                             </form>
+                         )
+                     )}
+                 </div>
+             </div>
           </div>
           
           {/* API Key Input */}
