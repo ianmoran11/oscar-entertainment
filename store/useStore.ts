@@ -16,6 +16,32 @@ export type Playlist = {
 
 export type QuizType = 'phonetics' | 'math'
 
+export type QuizItemStats = {
+    attempts: number
+    correct: number
+}
+
+export type QuizStats = {
+    totalAttempts: number
+    totalCorrect: number
+    items: Record<string, QuizItemStats>
+}
+
+export type DailyUsage = {
+    date: string
+    watchTimeSeconds: number
+}
+
+interface StatsState {
+    stats: {
+        phonetics: QuizStats
+        math: QuizStats
+        usage: DailyUsage[]
+    }
+    recordQuizAttempt: (type: 'phonetics' | 'math', itemId: string, isCorrect: boolean) => void
+    recordWatchTime: (seconds: number) => void
+}
+
 interface SettingsState {
   playlists: Playlist[]
   activePlaylistId: string
@@ -45,6 +71,8 @@ interface SettingsState {
   updateSettings: (settings: Partial<SettingsState>) => void
 }
 
+interface Store extends SettingsState, StatsState, PlayerState {} // Combined below
+
 interface PlayerState {
   isPlaying: boolean
   isInterrupted: boolean
@@ -58,12 +86,20 @@ interface PlayerState {
   setVideoIndex: (index: number) => void
 }
 
-interface Store extends SettingsState, PlayerState {}
+// removed interface Store extends... line as we do it in create or above
+// Actually I need to be careful with the extends. I defined Store above in my replace block but it was inside a text block.
+// Store definition needs to include StatsState.
 
 export const useStore = create<Store>()(
   persist(
     (set, get) => ({
       // Defaults
+      stats: {
+          phonetics: { totalAttempts: 0, totalCorrect: 0, items: {} },
+          math: { totalAttempts: 0, totalCorrect: 0, items: {} },
+          usage: []
+      },
+
       playlists: [
           { 
               id: 'default', 
@@ -154,6 +190,41 @@ export const useStore = create<Store>()(
 
       updateSettings: (newSettings) => set((state) => ({ ...state, ...newSettings })),
 
+      // Stats Actions
+      recordQuizAttempt: (type, itemId, isCorrect) => set(state => {
+          const stats = { ...state.stats }
+          const category = stats[type]
+          
+          // Update Totals
+          category.totalAttempts += 1
+          if (isCorrect) category.totalCorrect += 1
+          
+          // Update Item
+          const item = category.items[itemId] || { attempts: 0, correct: 0 }
+          item.attempts += 1
+          if (isCorrect) item.correct += 1
+          category.items[itemId] = item
+          
+          return { stats }
+      }),
+      
+      recordWatchTime: (seconds) => set(state => {
+          const today = new Date().toISOString().split('T')[0]
+          const usage = [...state.stats.usage]
+          const todayEntryIndex = usage.findIndex(u => u.date === today)
+          
+          if (todayEntryIndex >= 0) {
+              usage[todayEntryIndex] = {
+                  ...usage[todayEntryIndex],
+                  watchTimeSeconds: usage[todayEntryIndex].watchTimeSeconds + seconds
+              }
+          } else {
+              usage.push({ date: today, watchTimeSeconds: seconds })
+          }
+          
+          return { stats: { ...state.stats, usage } }
+      }),
+
       // Player Actions
       setIsPlaying: (playing) => set({ isPlaying: playing }),
       setInterrupted: (interrupted) => set({ isInterrupted: interrupted }),
@@ -193,7 +264,8 @@ export const useStore = create<Store>()(
          incorrectDelaySeconds: state.incorrectDelaySeconds,
          phoneticsOptionsCount: state.phoneticsOptionsCount,
          quizVolume: state.quizVolume,
-         youtubeApiKey: state.youtubeApiKey
+         youtubeApiKey: state.youtubeApiKey,
+         stats: state.stats
       } as unknown as Store),
     }
   )

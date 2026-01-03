@@ -11,9 +11,10 @@ interface PhoneticsQuizProps {
   incorrectDelay: number
   optionsCount: number
   volume: number
+  onAnswer: (itemId: string, isCorrect: boolean) => void
 }
 
-export function PhoneticsQuiz({ onComplete, requiredCorrect, incorrectDelay, optionsCount, volume }: PhoneticsQuizProps) {
+export function PhoneticsQuiz({ onComplete, requiredCorrect, incorrectDelay, optionsCount, volume, onAnswer }: PhoneticsQuizProps) {
   const [target, setTarget] = useState<any>(null)
   const [choices, setChoices] = useState<any[]>([])
   const [status, setStatus] = useState<'thinking' | 'correct' | 'incorrect'>('thinking')
@@ -90,6 +91,7 @@ export function PhoneticsQuiz({ onComplete, requiredCorrect, incorrectDelay, opt
     if (status !== 'thinking') return // Prevent multiple clicks or clicks during delay
 
     if (letter.id === target.id) {
+      onAnswer(target.id, true)
       setStatus('correct')
       playSound('/sounds/success.mp3')
       confetti({
@@ -110,6 +112,7 @@ export function PhoneticsQuiz({ onComplete, requiredCorrect, incorrectDelay, opt
           }, 2000)
       }
     } else {
+      onAnswer(target.id, false)
       setStatus('incorrect')
       playErrorTone()
       

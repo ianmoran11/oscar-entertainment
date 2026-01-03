@@ -10,6 +10,7 @@ interface MathQuizProps {
   requiredCorrect: number
   incorrectDelay: number
   volume: number
+  onAnswer: (itemId: string, isCorrect: boolean) => void
 }
 
 type Question = {
@@ -19,7 +20,7 @@ type Question = {
   choices: number[]
 }
 
-export function MathQuiz({ difficulty, onComplete, requiredCorrect, incorrectDelay, volume }: MathQuizProps) {
+export function MathQuiz({ difficulty, onComplete, requiredCorrect, incorrectDelay, volume, onAnswer }: MathQuizProps) {
   const [question, setQuestion] = useState<Question | null>(null)
   const [status, setStatus] = useState<'thinking' | 'correct' | 'incorrect'>('thinking')
   const [score, setScore] = useState(0)
@@ -133,6 +134,7 @@ export function MathQuiz({ difficulty, onComplete, requiredCorrect, incorrectDel
     if (status !== 'thinking' || !question) return
 
     if (val === question.answer) {
+      onAnswer(`math-diff-${difficulty}`, true)
       setStatus('correct')
       speak("Correct!")
       confetti({
@@ -152,6 +154,7 @@ export function MathQuiz({ difficulty, onComplete, requiredCorrect, incorrectDel
           }, 2000)
       }
     } else {
+      onAnswer(`math-diff-${difficulty}`, false)
       setStatus('incorrect')
       speak("Try again")
       playErrorTone()

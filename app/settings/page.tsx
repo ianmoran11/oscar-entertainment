@@ -2,7 +2,7 @@
 
 import { useStore, VideoSource } from '@/store/useStore'
 import { getYouTubeID } from '@/lib/utils'
-import { Trash2, Plus, ArrowLeft, Loader2, Key, LayoutList, FolderPlus, RefreshCw, Link as LinkIcon, Unlink, Youtube } from 'lucide-react'
+import { Trash2, Plus, ArrowLeft, Loader2, Key, LayoutList, FolderPlus, RefreshCw, Link as LinkIcon, Unlink, Youtube, Activity } from 'lucide-react'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 
@@ -183,7 +183,12 @@ export default function SettingsPage() {
           <Link href="/" className="p-2 hover:bg-slate-800 rounded-full transition-colors">
             <ArrowLeft />
           </Link>
-          <h1 className="text-3xl font-bold">Settings</h1>
+          <div className="flex-1 flex items-center justify-between">
+              <h1 className="text-3xl font-bold">Settings</h1>
+              <Link href="/stats" className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700 text-blue-400 font-medium">
+                <Activity size={18} /> View Statistics
+              </Link>
+          </div>
         </header>
 
         {/* Video Management */}

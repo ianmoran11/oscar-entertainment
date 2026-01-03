@@ -15,7 +15,8 @@ export function QuizContainer() {
     requiredCorrectAnswers,
     incorrectDelaySeconds,
     phoneticsOptionsCount,
-    quizVolume
+    quizVolume,
+    recordQuizAttempt
   } = useStore()
 
   const [activeQuiz, setActiveQuiz] = useState<'phonetics' | 'math' | null>(null)
@@ -53,6 +54,7 @@ export function QuizContainer() {
           incorrectDelay={incorrectDelaySeconds}
           optionsCount={phoneticsOptionsCount}
           volume={quizVolume}
+          onAnswer={(itemId, isCorrect) => recordQuizAttempt('phonetics', itemId, isCorrect)}
         />
       )}
       
@@ -63,6 +65,7 @@ export function QuizContainer() {
           requiredCorrect={requiredCorrectAnswers}
           incorrectDelay={incorrectDelaySeconds}
           volume={quizVolume}
+          onAnswer={(itemId, isCorrect) => recordQuizAttempt('math', itemId, isCorrect)}
         />
       )}
       

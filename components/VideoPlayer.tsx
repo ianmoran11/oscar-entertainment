@@ -17,7 +17,8 @@ export function VideoPlayer() {
     setInterrupted,
     nextVideo,
     lastInterruptionTimestamp,
-    resetInterruptionTimer
+    resetInterruptionTimer,
+    recordWatchTime
   } = useStore()
 
   const activePlaylist = playlists.find(p => p.id === activePlaylistId)
@@ -52,6 +53,17 @@ export function VideoPlayer() {
       return () => clearInterval(interval)
     }
   }, [interruptionMode, interruptionIntervalMinutes, isInterrupted, lastInterruptionTimestamp])
+
+  // Track Usage
+  useEffect(() => {
+      let interval: NodeJS.Timeout
+      if (isPlayingLocal && !isInterrupted) {
+          interval = setInterval(() => {
+              recordWatchTime(10)
+          }, 10000)
+      }
+      return () => clearInterval(interval)
+  }, [isPlayingLocal, isInterrupted, recordWatchTime])
 
   const triggerInterruption = () => {
     if (playerRef.current) {
