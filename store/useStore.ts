@@ -26,6 +26,8 @@ interface SettingsState {
   mathDifficulty: 1 | 2 | 3 
   requiredCorrectAnswers: number
   incorrectDelaySeconds: number
+  phoneticsOptionsCount: number
+  quizVolume: number
   youtubeApiKey: string
   
   // Playlist Actions
@@ -79,6 +81,8 @@ export const useStore = create<Store>()(
       mathDifficulty: 1,
       requiredCorrectAnswers: 1,
       incorrectDelaySeconds: 2,
+      phoneticsOptionsCount: 2,
+      quizVolume: 1.0,
       youtubeApiKey: '',
 
       isPlaying: false,
@@ -187,6 +191,8 @@ export const useStore = create<Store>()(
          mathDifficulty: state.mathDifficulty,
          requiredCorrectAnswers: state.requiredCorrectAnswers,
          incorrectDelaySeconds: state.incorrectDelaySeconds,
+         phoneticsOptionsCount: state.phoneticsOptionsCount,
+         quizVolume: state.quizVolume,
          youtubeApiKey: state.youtubeApiKey
       } as unknown as Store),
     }

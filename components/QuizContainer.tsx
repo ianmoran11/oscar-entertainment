@@ -13,7 +13,9 @@ export function QuizContainer() {
     enabledQuizTypes, 
     mathDifficulty,
     requiredCorrectAnswers,
-    incorrectDelaySeconds
+    incorrectDelaySeconds,
+    phoneticsOptionsCount,
+    quizVolume
   } = useStore()
 
   const [activeQuiz, setActiveQuiz] = useState<'phonetics' | 'math' | null>(null)
@@ -49,6 +51,8 @@ export function QuizContainer() {
           onComplete={onComplete} 
           requiredCorrect={requiredCorrectAnswers}
           incorrectDelay={incorrectDelaySeconds}
+          optionsCount={phoneticsOptionsCount}
+          volume={quizVolume}
         />
       )}
       
@@ -58,6 +62,7 @@ export function QuizContainer() {
           onComplete={onComplete} 
           requiredCorrect={requiredCorrectAnswers}
           incorrectDelay={incorrectDelaySeconds}
+          volume={quizVolume}
         />
       )}
       

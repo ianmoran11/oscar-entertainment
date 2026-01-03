@@ -9,6 +9,7 @@ interface MathQuizProps {
   onComplete: () => void
   requiredCorrect: number
   incorrectDelay: number
+  volume: number
 }
 
 type Question = {
@@ -18,10 +19,19 @@ type Question = {
   choices: number[]
 }
 
-export function MathQuiz({ difficulty, onComplete, requiredCorrect, incorrectDelay }: MathQuizProps) {
+export function MathQuiz({ difficulty, onComplete, requiredCorrect, incorrectDelay, volume }: MathQuizProps) {
   const [question, setQuestion] = useState<Question | null>(null)
   const [status, setStatus] = useState<'thinking' | 'correct' | 'incorrect'>('thinking')
   const [score, setScore] = useState(0)
+  const [lockoutTimer, setLockoutTimer] = useState<number | null>(null)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Cleanup
+  useEffect(() => {
+      return () => {
+          if (timerRef.current) clearInterval(timerRef.current)
+      }
+  }, [])
   
   const generateChoices = useCallback((target: number, min: number, max: number): number[] => {
     const choices = new Set<number>([target])
@@ -36,8 +46,35 @@ export function MathQuiz({ difficulty, onComplete, requiredCorrect, incorrectDel
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(text)
       utterance.rate = 0.9
+      utterance.volume = volume
       window.speechSynthesis.cancel() // Cancel previous
       window.speechSynthesis.speak(utterance)
+    }
+  }
+
+  const playErrorTone = () => {
+    try {
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext
+        if (!AudioContext) return
+        
+        const ctx = new AudioContext()
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        
+        osc.type = 'sawtooth'
+        osc.frequency.setValueAtTime(150, ctx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.3)
+        
+        gain.gain.setValueAtTime(volume * 0.5, ctx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3)
+        
+        osc.start()
+        osc.stop(ctx.currentTime + 0.3)
+    } catch (e) {
+        console.error("Audio Context Error", e)
     }
   }
 
@@ -117,14 +154,36 @@ export function MathQuiz({ difficulty, onComplete, requiredCorrect, incorrectDel
     } else {
       setStatus('incorrect')
       speak("Try again")
-      setTimeout(() => setStatus('thinking'), incorrectDelay * 1000)
+      playErrorTone()
+
+      let timeLeft = incorrectDelay
+      setLockoutTimer(timeLeft)
+
+      if (timerRef.current) clearInterval(timerRef.current)
+      
+      timerRef.current = setInterval(() => {
+          timeLeft -= 0.1
+          if (timeLeft <= 0) {
+              if (timerRef.current) clearInterval(timerRef.current)
+              setLockoutTimer(null)
+              setStatus('thinking')
+          } else {
+              setLockoutTimer(Math.max(0, timeLeft))
+          }
+      }, 100)
     }
   }
 
   if (!question) return <div>Loading...</div>
 
   return (
-    <div className="flex flex-col items-center justify-center p-8 bg-white/90 rounded-2xl shadow-2xl max-w-2xl w-full mx-4">
+    <div className="flex flex-col items-center justify-center p-8 bg-white/90 rounded-2xl shadow-2xl max-w-2xl w-full mx-4 relative overflow-hidden transition-colors duration-300">
+      
+      {/* Lockout Overlay */}
+      {status === 'incorrect' && (
+          <div className="absolute inset-0 bg-slate-900/10 z-0 pointer-events-none transition-colors duration-300" />
+      )}
+
       {/* Header with Progress */}
       <div className="w-full flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-slate-800">Math Challenge</h2>
@@ -147,23 +206,36 @@ export function MathQuiz({ difficulty, onComplete, requiredCorrect, incorrectDel
         <Volume2 className="w-12 h-12 text-white" />
       </button>
 
-      <div className="grid grid-cols-3 gap-6 w-full">
-        {question.choices.map((val) => (
-          <button
-            key={val}
-            onClick={() => handleChoice(val)}
-            disabled={status !== 'thinking'}
-            className={`
-              aspect-square rounded-2xl text-6xl font-bold transition-all transform
-              bg-white border-4 shadow-md
-              ${status === 'correct' && val === question.answer ? 'border-green-500 bg-green-50 text-green-600 scale-110' : ''}
-              ${status === 'incorrect' ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 border-slate-200 text-slate-700'}
-            `}
-          >
-            {val}
-          </button>
-        ))}
+      <div className="grid grid-cols-3 gap-6 w-full z-10">
+        {question.choices.map((val) => {
+            const isCorrect = val === question.answer
+            const isIncorrectSelection = status === 'incorrect'
+
+            return (
+              <button
+                key={val}
+                onClick={() => handleChoice(val)}
+                disabled={status !== 'thinking'}
+                className={`
+                  aspect-square rounded-2xl text-6xl font-bold transition-all transform
+                  bg-white border-4 shadow-md
+                  ${status === 'correct' && isCorrect ? 'border-green-500 bg-green-50 text-green-600 scale-110' : ''}
+                  ${isIncorrectSelection ? 'opacity-20 grayscale scale-95 border-slate-300 cursor-not-allowed' : 'hover:scale-105 border-slate-200 text-slate-700'}
+                `}
+              >
+                {val}
+              </button>
+            )
+        })}
       </div>
+
+      {status === 'incorrect' && lockoutTimer !== null && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+              <div className="bg-slate-800/80 text-white px-6 py-4 rounded-xl text-3xl font-bold animate-pulse backdrop-blur-sm">
+                  Wait {Math.ceil(lockoutTimer)}s
+              </div>
+          </div>
+      )}
     </div>
   )
 }

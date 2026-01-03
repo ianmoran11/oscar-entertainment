@@ -25,6 +25,8 @@ export default function SettingsPage() {
     mathDifficulty,
     requiredCorrectAnswers,
     incorrectDelaySeconds,
+    phoneticsOptionsCount,
+    quizVolume,
     youtubeApiKey,
     updateSettings
   } = useStore()
@@ -457,6 +459,30 @@ export default function SettingsPage() {
                      className="bg-slate-900 rounded-lg px-4 py-3 border border-slate-700"
                    />
                </div>
+
+               <div className="flex flex-col gap-2">
+                    <label className="text-sm text-slate-400">Phonetics Options (2-8)</label>
+                    <input 
+                        type="number"
+                        min="2" max="8"
+                        value={phoneticsOptionsCount}
+                        onChange={(e) => updateSettings({ phoneticsOptionsCount: Math.min(8, Math.max(2, parseInt(e.target.value) || 2)) })}
+                        className="bg-slate-900 rounded-lg px-4 py-3 border border-slate-700"
+                    />
+                </div>
+                
+                <div className="flex flex-col gap-2">
+                    <label className="text-sm text-slate-400">Quiz Volume ({Math.round(quizVolume * 100)}%)</label>
+                    <div className="h-full flex items-center px-2">
+                        <input 
+                            type="range"
+                            min="0" max="100"
+                            value={quizVolume * 100}
+                            onChange={(e) => updateSettings({ quizVolume: parseInt(e.target.value) / 100 })}
+                            className="w-full accent-blue-500 h-2 bg-slate-900 rounded-lg appearance-none cursor-pointer"
+                        />
+                    </div>
+                </div>
             </div>
 
             {enabledQuizTypes.includes('math') && (
