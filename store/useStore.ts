@@ -19,6 +19,7 @@ export type QuizType = 'phonetics' | 'math'
 export type QuizItemStats = {
     attempts: number
     correct: number
+    history: boolean[] // Last 10 attempts (true=correct, false=incorrect)
 }
 
 export type QuizStats = {
@@ -30,6 +31,8 @@ export type QuizStats = {
 export type DailyUsage = {
     date: string
     watchTimeSeconds: number
+    quizAttempts: number
+    quizCorrect: number
 }
 
 interface StatsState {
@@ -71,8 +74,6 @@ interface SettingsState {
   updateSettings: (settings: Partial<SettingsState>) => void
 }
 
-interface Store extends SettingsState, StatsState, PlayerState {} // Combined below
-
 interface PlayerState {
   isPlaying: boolean
   isInterrupted: boolean
@@ -86,9 +87,7 @@ interface PlayerState {
   setVideoIndex: (index: number) => void
 }
 
-// removed interface Store extends... line as we do it in create or above
-// Actually I need to be careful with the extends. I defined Store above in my replace block but it was inside a text block.
-// Store definition needs to include StatsState.
+interface Store extends SettingsState, StatsState, PlayerState {}
 
 export const useStore = create<Store>()(
   persist(
@@ -200,12 +199,36 @@ export const useStore = create<Store>()(
           if (isCorrect) category.totalCorrect += 1
           
           // Update Item
-          const item = category.items[itemId] || { attempts: 0, correct: 0 }
+          const item = category.items[itemId] || { attempts: 0, correct: 0, history: [] }
           item.attempts += 1
           if (isCorrect) item.correct += 1
-          category.items[itemId] = item
           
-          return { stats }
+          // Update History (Keep last 10)
+          item.history = [...(item.history || []), isCorrect].slice(-10)
+          
+          category.items[itemId] = item
+
+          // Update Daily Stats
+          const today = new Date().toISOString().split('T')[0]
+          const usage = [...stats.usage]
+          const todayEntryIndex = usage.findIndex(u => u.date === today)
+          
+          if (todayEntryIndex >= 0) {
+              usage[todayEntryIndex] = {
+                  ...usage[todayEntryIndex],
+                  quizAttempts: (usage[todayEntryIndex].quizAttempts || 0) + 1,
+                  quizCorrect: (usage[todayEntryIndex].quizCorrect || 0) + (isCorrect ? 1 : 0)
+              }
+          } else {
+              usage.push({ 
+                  date: today, 
+                  watchTimeSeconds: 0, 
+                  quizAttempts: 1, 
+                  quizCorrect: isCorrect ? 1 : 0 
+              })
+          }
+          
+          return { stats: { ...stats, usage } }
       }),
       
       recordWatchTime: (seconds) => set(state => {
@@ -219,7 +242,12 @@ export const useStore = create<Store>()(
                   watchTimeSeconds: usage[todayEntryIndex].watchTimeSeconds + seconds
               }
           } else {
-              usage.push({ date: today, watchTimeSeconds: seconds })
+              usage.push({ 
+                  date: today, 
+                  watchTimeSeconds: seconds,
+                  quizAttempts: 0,
+                  quizCorrect: 0
+              })
           }
           
           return { stats: { ...state.stats, usage } }
