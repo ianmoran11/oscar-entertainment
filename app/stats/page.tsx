@@ -1,7 +1,7 @@
 'use client'
 
 import { useStore } from '@/store/useStore'
-import { ArrowLeft, Activity, Trophy, Clock, Brain, Calculator, X } from 'lucide-react'
+import { ArrowLeft, Activity, Trophy, Clock, Brain, Calculator, BookOpen, X } from 'lucide-react'
 import Link from 'next/link'
 import { useState, useMemo } from 'react'
 
@@ -9,6 +9,7 @@ export default function StatsPage() {
     const { stats } = useStore()
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc') // asc = worst accuracy first
     const [selectedLetter, setSelectedLetter] = useState<string | null>(null)
+    const [selectedWord, setSelectedWord] = useState<string | null>(null)
 
     // Compute Phonetics
     const phoneticsData = useMemo(() => {
@@ -22,6 +23,21 @@ export default function StatsPage() {
             return b.accuracy - a.accuracy
         })
     }, [stats.phonetics.items, sortOrder])
+
+    // Compute Words
+    const wordsData = useMemo(() => {
+        const wordsStats = stats.words || { items: {} }
+        return Object.entries(wordsStats.items).map(([id, s]) => ({
+            id,
+            attempts: s.attempts,
+            correct: s.correct,
+            accuracy: s.attempts > 0 ? (s.correct / s.attempts) * 100 : 0,
+            history: s.history
+        })).sort((a, b) => {
+            if (sortOrder === 'asc') return a.accuracy - b.accuracy
+            return b.accuracy - a.accuracy
+        })
+    }, [stats.words?.items, sortOrder])
 
     // Compute Usage (Last 7 Days)
     const usageData = useMemo(() => {
@@ -64,6 +80,18 @@ export default function StatsPage() {
         }
     }, [selectedLetter, stats.phonetics.items])
 
+    const selectedWordData = useMemo(() => {
+        if (!selectedWord) return null
+        const wordsStats = stats.words || { items: {} }
+        const s = wordsStats.items[selectedWord]
+        if (!s) return null
+        return {
+            id: selectedWord,
+            ...s,
+            accuracy: s.attempts > 0 ? Math.round((s.correct / s.attempts) * 100) : 0
+        }
+    }, [selectedWord, stats.words?.items])
+
     return (
         <div className="min-h-screen bg-slate-900 text-slate-100 p-8">
             <div className="max-w-5xl mx-auto space-y-12">
@@ -78,7 +106,7 @@ export default function StatsPage() {
                 </header>
 
                 {/* Top Level Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-4 opacity-10">
                             <Clock size={100} />
@@ -115,6 +143,21 @@ export default function StatsPage() {
                          <div className="text-sm text-green-400 mt-1">
                             {stats.math.totalAttempts > 0 
                                 ? Math.round((stats.math.totalCorrect / stats.math.totalAttempts) * 100) 
+                                : 0}% Accuracy
+                        </div>
+                    </div>
+
+                    <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 relative overflow-hidden">
+                         <div className="absolute top-0 right-0 p-4 opacity-10">
+                            <BookOpen size={100} />
+                        </div>
+                        <h3 className="text-slate-400 font-medium mb-2">Words Attempts</h3>
+                        <div className="text-4xl font-bold">
+                            {stats.words?.totalAttempts || 0}
+                        </div>
+                         <div className="text-sm text-green-400 mt-1">
+                            {(stats.words?.totalAttempts || 0) > 0 
+                                ? Math.round(((stats.words?.totalCorrect || 0) / stats.words.totalAttempts) * 100) 
                                 : 0}% Accuracy
                         </div>
                     </div>
@@ -230,6 +273,53 @@ export default function StatsPage() {
                     </div>
                 </section>
 
+                {/* Words Breakdown */}
+                <section className="space-y-6">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-bold flex items-center gap-2">
+                            <BookOpen className="w-5 h-5 text-blue-400" /> Words Breakdown
+                        </h2>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                        {wordsData.map((item) => (
+                            <button 
+                                key={item.id}
+                                onClick={() => setSelectedWord(item.id)}
+                                className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col items-center hover:bg-slate-750 hover:border-slate-500 transition-all hover:-translate-y-1 hover:shadow-lg cursor-pointer text-left"
+                            >
+                                <img 
+                                    src={`/pictures/${item.id}.png`} 
+                                    alt={item.id}
+                                    className="w-16 h-16 object-contain mb-2"
+                                />
+                                <div className="text-lg font-bold mb-1 text-white capitalize">{item.id}</div>
+                                
+                                <div className="w-full space-y-2">
+                                    <div className="flex justify-between text-xs text-slate-400">
+                                        <span>{Math.round(item.accuracy)}%</span>
+                                        <span>{item.correct}/{item.attempts}</span>
+                                    </div>
+                                    <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                                        <div 
+                                            className={`h-full rounded-full ${
+                                                item.accuracy >= 80 ? 'bg-green-500' :
+                                                item.accuracy >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                                            }`}
+                                            style={{ width: `${item.accuracy}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            </button>
+                        ))}
+                        {wordsData.length === 0 && (
+                            <div className="col-span-full text-center py-12 text-slate-500">
+                                No words data collected yet.
+                            </div>
+                        )}
+                    </div>
+                </section>
+
             </div>
 
             {/* Letter Detail Modal */}
@@ -285,6 +375,76 @@ export default function StatsPage() {
                                     />
                                 ))}
                                 {(!selectedLetterData.history || selectedLetterData.history.length === 0) && (
+                                    <div className="text-center w-full text-slate-600 text-sm italic">No attempts yet</div>
+                                )}
+                            </div>
+                            <div className="flex justify-between text-[10px] text-slate-500 mt-1 px-1">
+                                <span>Oldest</span>
+                                <span>Newest</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Word Detail Modal */}
+            {selectedWordData && (
+                <div 
+                    className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+                    onClick={() => setSelectedWord(null)}
+                >
+                    <div 
+                        className="bg-slate-900 border border-slate-700 p-8 rounded-2xl w-full max-w-md space-y-6 shadow-2xl relative animate-in zoom-in-95 duration-200"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <button 
+                            onClick={() => setSelectedWord(null)}
+                            className="absolute top-4 right-4 text-slate-400 hover:text-white p-2"
+                        >
+                            <X size={24} />
+                        </button>
+
+                        <div className="text-center space-y-2">
+                            <img 
+                                src={`/pictures/${selectedWordData.id}.png`} 
+                                alt={selectedWordData.id}
+                                className="w-24 h-24 object-contain mx-auto mb-2"
+                            />
+                            <h2 className="text-4xl font-bold text-white mb-2 capitalize">{selectedWordData.id}</h2>
+                            <div className={`inline-block px-3 py-1 rounded-full text-sm font-bold ${
+                                selectedWordData.accuracy >= 80 ? 'bg-green-500/20 text-green-400' :
+                                selectedWordData.accuracy >= 50 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'
+                            }`}>
+                                {selectedWordData.accuracy}% Accuracy
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center">
+                                <div className="text-sm text-slate-400">Attempts</div>
+                                <div className="text-2xl font-bold">{selectedWordData.attempts}</div>
+                            </div>
+                            <div className="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center">
+                                <div className="text-sm text-slate-400">Correct</div>
+                                <div className="text-2xl font-bold text-green-400">{selectedWordData.correct}</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 className="text-sm font-medium text-slate-400 mb-3">Recent History (Last 10)</h3>
+                            <div className="flex justify-between gap-1">
+                                {selectedWordData.history?.map((result, i) => (
+                                    <div 
+                                        key={i}
+                                        className={`h-8 flex-1 rounded-md transition-all ${
+                                            result 
+                                            ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' 
+                                            : 'bg-red-500/50'
+                                        }`}
+                                        title={result ? 'Correct' : 'Incorrect'}
+                                    />
+                                ))}
+                                {(!selectedWordData.history || selectedWordData.history.length === 0) && (
                                     <div className="text-center w-full text-slate-600 text-sm italic">No attempts yet</div>
                                 )}
                             </div>
