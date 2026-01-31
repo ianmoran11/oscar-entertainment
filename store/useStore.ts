@@ -14,7 +14,7 @@ export type Playlist = {
     youtubePlaylistId?: string
 }
 
-export type QuizType = 'phonetics' | 'math'
+export type QuizType = 'phonetics' | 'math' | 'words'
 
 export type QuizItemStats = {
     attempts: number
@@ -39,9 +39,10 @@ interface StatsState {
     stats: {
         phonetics: QuizStats
         math: QuizStats
+        words: QuizStats
         usage: DailyUsage[]
     }
-    recordQuizAttempt: (type: 'phonetics' | 'math', itemId: string, isCorrect: boolean) => void
+    recordQuizAttempt: (type: 'phonetics' | 'math' | 'words', itemId: string, isCorrect: boolean) => void
     recordWatchTime: (seconds: number) => void
 }
 
@@ -56,6 +57,7 @@ interface SettingsState {
   requiredCorrectAnswers: number
   incorrectDelaySeconds: number
   phoneticsOptionsCount: number
+  wordsOptionsCount: number
   quizVolume: number
   youtubeApiKey: string
   
@@ -96,6 +98,7 @@ export const useStore = create<Store>()(
       stats: {
           phonetics: { totalAttempts: 0, totalCorrect: 0, items: {} },
           math: { totalAttempts: 0, totalCorrect: 0, items: {} },
+          words: { totalAttempts: 0, totalCorrect: 0, items: {} },
           usage: []
       },
 
@@ -112,11 +115,12 @@ export const useStore = create<Store>()(
       
       interruptionMode: 'time',
       interruptionIntervalMinutes: 5,
-      enabledQuizTypes: ['phonetics', 'math'],
+      enabledQuizTypes: ['phonetics', 'math', 'words'],
       mathDifficulty: 1,
       requiredCorrectAnswers: 1,
       incorrectDelaySeconds: 2,
       phoneticsOptionsCount: 2,
+      wordsOptionsCount: 3,
       quizVolume: 1.0,
       youtubeApiKey: '',
 
@@ -192,6 +196,12 @@ export const useStore = create<Store>()(
       // Stats Actions
       recordQuizAttempt: (type, itemId, isCorrect) => set(state => {
           const stats = { ...state.stats }
+          
+          // Ensure category exists (for new quiz types added after initial setup)
+          if (!stats[type]) {
+              stats[type] = { totalAttempts: 0, totalCorrect: 0, items: {} }
+          }
+          
           const category = stats[type]
           
           // Update Totals
@@ -268,7 +278,7 @@ export const useStore = create<Store>()(
     }),
     {
       name: 'oscar-entertainment-storage',
-      version: 1,
+      version: 2,
       migrate: (persistedState: any, version: number) => {
           if (version === 0) {
               // Migration from simple video list to playlist
@@ -277,6 +287,21 @@ export const useStore = create<Store>()(
                   ...persistedState,
                   playlists: [{ id: 'default', name: 'My Playlist', videos }],
                   activePlaylistId: 'default'
+              }
+          }
+          if (version === 1) {
+              // Migration to add words quiz type
+              const stats = persistedState.stats || {}
+              if (!stats.words) {
+                  stats.words = { totalAttempts: 0, totalCorrect: 0, items: {} }
+              }
+              return {
+                  ...persistedState,
+                  stats,
+                  wordsOptionsCount: persistedState.wordsOptionsCount || 3,
+                  enabledQuizTypes: persistedState.enabledQuizTypes?.includes('words') 
+                      ? persistedState.enabledQuizTypes 
+                      : [...(persistedState.enabledQuizTypes || ['phonetics', 'math']), 'words']
               }
           }
           return persistedState
@@ -291,6 +316,7 @@ export const useStore = create<Store>()(
          requiredCorrectAnswers: state.requiredCorrectAnswers,
          incorrectDelaySeconds: state.incorrectDelaySeconds,
          phoneticsOptionsCount: state.phoneticsOptionsCount,
+         wordsOptionsCount: state.wordsOptionsCount,
          quizVolume: state.quizVolume,
          youtubeApiKey: state.youtubeApiKey,
          stats: state.stats

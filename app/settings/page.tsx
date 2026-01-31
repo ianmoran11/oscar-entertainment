@@ -26,6 +26,7 @@ export default function SettingsPage() {
     requiredCorrectAnswers,
     incorrectDelaySeconds,
     phoneticsOptionsCount,
+    wordsOptionsCount,
     quizVolume,
     youtubeApiKey,
     updateSettings
@@ -167,7 +168,7 @@ export default function SettingsPage() {
     }
   }
 
-  const toggleQuizType = (type: 'phonetics' | 'math') => {
+  const toggleQuizType = (type: 'phonetics' | 'math' | 'words') => {
     if (enabledQuizTypes.includes(type)) {
       updateSettings({ enabledQuizTypes: enabledQuizTypes.filter(t => t !== type) })
     } else {
@@ -422,8 +423,8 @@ export default function SettingsPage() {
           <h2 className="text-xl font-semibold opacity-80">Quiz Content</h2>
           
           <div className="bg-slate-800 rounded-lg p-6 space-y-6 border border-slate-700">
-            <div className="flex gap-4">
-               <label className="flex items-center gap-3 bg-slate-900 p-4 rounded-lg flex-1 cursor-pointer">
+            <div className="grid grid-cols-3 gap-4">
+               <label className="flex items-center gap-3 bg-slate-900 p-4 rounded-lg cursor-pointer">
                  <input 
                    type="checkbox" 
                    checked={enabledQuizTypes.includes('phonetics')}
@@ -432,7 +433,7 @@ export default function SettingsPage() {
                  />
                  <span>Phonetics</span>
                </label>
-               <label className="flex items-center gap-3 bg-slate-900 p-4 rounded-lg flex-1 cursor-pointer">
+               <label className="flex items-center gap-3 bg-slate-900 p-4 rounded-lg cursor-pointer">
                  <input 
                    type="checkbox" 
                    checked={enabledQuizTypes.includes('math')}
@@ -440,6 +441,15 @@ export default function SettingsPage() {
                    className="w-5 h-5 accent-blue-500"
                  />
                  <span>Math</span>
+               </label>
+               <label className="flex items-center gap-3 bg-slate-900 p-4 rounded-lg cursor-pointer">
+                 <input 
+                   type="checkbox" 
+                   checked={enabledQuizTypes.includes('words')}
+                   onChange={() => toggleQuizType('words')}
+                   className="w-5 h-5 accent-blue-500"
+                 />
+                 <span>Words</span>
                </label>
             </div>
 
@@ -472,6 +482,16 @@ export default function SettingsPage() {
                         min="2" max="8"
                         value={phoneticsOptionsCount}
                         onChange={(e) => updateSettings({ phoneticsOptionsCount: Math.min(8, Math.max(2, parseInt(e.target.value) || 2)) })}
+                        className="bg-slate-900 rounded-lg px-4 py-3 border border-slate-700"
+                    />
+                </div>
+                <div className="flex flex-col gap-2">
+                    <label className="text-sm text-slate-400">Words Options (2-6)</label>
+                    <input 
+                        type="number"
+                        min="2" max="6"
+                        value={wordsOptionsCount}
+                        onChange={(e) => updateSettings({ wordsOptionsCount: Math.min(6, Math.max(2, parseInt(e.target.value) || 3)) })}
                         className="bg-slate-900 rounded-lg px-4 py-3 border border-slate-700"
                     />
                 </div>
