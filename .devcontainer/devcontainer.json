@@ -1,0 +1,26 @@
+{
+  "name": "claude-code",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+
+  // Mount the workspace into /workspace
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+
+  // Pass your Anthropic API key and any other needed env vars from the host
+  "containerEnv": {
+    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
+    "CLAUDE_CONFIG_DIR": "/home/node/.claude"
+  },
+
+  // Share the host's Claude config so the container uses the same credentials
+  "mounts": [
+    "source=${localEnv:HOME}/.claude,target=/home/node/.claude,type=bind,consistency=cached"
+  ],
+
+  // Let devcontainer inject a sleep to keep the container alive
+  "overrideCommand": true,
+
+  "remoteUser": "node"
+}
