@@ -189,7 +189,7 @@ export function MathQuiz({ difficulty, onComplete, requiredCorrect, incorrectDel
 
       {/* Header with Progress */}
       <div className="w-full flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-slate-800">Math Challenge</h2>
+          <h2 className="text-4xl font-bold text-slate-800">Math Challenge</h2>
           <div className="flex gap-1">
               {Array.from({ length: requiredCorrect }).map((_, i) => (
                   <Star 
@@ -200,7 +200,7 @@ export function MathQuiz({ difficulty, onComplete, requiredCorrect, incorrectDel
           </div>
       </div>
 
-      <h2 className="text-4xl font-bold mb-8 text-slate-800 text-center">{question.text}</h2>
+      <h2 className="text-7xl font-bold mb-8 text-slate-800 text-center">{question.text}</h2>
       
       <button 
         onClick={() => speak(question.audioText)}
@@ -220,7 +220,7 @@ export function MathQuiz({ difficulty, onComplete, requiredCorrect, incorrectDel
                 onClick={() => handleChoice(val)}
                 disabled={status !== 'thinking'}
                 className={`
-                  aspect-square rounded-2xl text-6xl font-bold transition-all transform
+                  aspect-square rounded-2xl text-8xl font-bold transition-all transform
                   bg-white border-4 shadow-md
                   ${status === 'correct' && isCorrect ? 'border-green-500 bg-green-50 text-green-600 scale-110' : ''}
                   ${isIncorrectSelection ? 'opacity-20 grayscale scale-95 border-slate-300 cursor-not-allowed' : 'hover:scale-105 border-slate-200 text-slate-700'}
