@@ -35,12 +35,20 @@ export type DailyUsage = {
     quizCorrect: number
 }
 
+export type QuizLogEntry = {
+    timestamp: string // ISO string
+    type: QuizType
+    itemId: string
+    isCorrect: boolean
+}
+
 interface StatsState {
     stats: {
         phonetics: QuizStats
         math: QuizStats
         words: QuizStats
         usage: DailyUsage[]
+        quizLog: QuizLogEntry[]
     }
     recordQuizAttempt: (type: 'phonetics' | 'math' | 'words', itemId: string, isCorrect: boolean) => void
     recordWatchTime: (seconds: number) => void
@@ -99,7 +107,8 @@ export const useStore = create<Store>()(
           phonetics: { totalAttempts: 0, totalCorrect: 0, items: {} },
           math: { totalAttempts: 0, totalCorrect: 0, items: {} },
           words: { totalAttempts: 0, totalCorrect: 0, items: {} },
-          usage: []
+          usage: [],
+          quizLog: []
       },
 
       playlists: [
@@ -238,7 +247,15 @@ export const useStore = create<Store>()(
               })
           }
           
-          return { stats: { ...stats, usage } }
+          // Append to quiz log
+          const quizLog = [...(stats.quizLog || []), {
+              timestamp: new Date().toISOString(),
+              type,
+              itemId,
+              isCorrect
+          }]
+
+          return { stats: { ...stats, usage, quizLog } }
       }),
       
       recordWatchTime: (seconds) => set(state => {
@@ -278,7 +295,7 @@ export const useStore = create<Store>()(
     }),
     {
       name: 'oscar-entertainment-storage',
-      version: 2,
+      version: 3,
       migrate: (persistedState: any, version: number) => {
           if (version === 0) {
               // Migration from simple video list to playlist
@@ -299,10 +316,18 @@ export const useStore = create<Store>()(
                   ...persistedState,
                   stats,
                   wordsOptionsCount: persistedState.wordsOptionsCount || 3,
-                  enabledQuizTypes: persistedState.enabledQuizTypes?.includes('words') 
-                      ? persistedState.enabledQuizTypes 
+                  enabledQuizTypes: persistedState.enabledQuizTypes?.includes('words')
+                      ? persistedState.enabledQuizTypes
                       : [...(persistedState.enabledQuizTypes || ['phonetics', 'math']), 'words']
               }
+          }
+          if (version === 2) {
+              // Migration to add quiz log
+              const stats = persistedState.stats || {}
+              if (!stats.quizLog) {
+                  stats.quizLog = []
+              }
+              return { ...persistedState, stats }
           }
           return persistedState
       },

@@ -1,7 +1,7 @@
 'use client'
 
 import { useStore } from '@/store/useStore'
-import { ArrowLeft, Activity, Trophy, Clock, Brain, Calculator, BookOpen, X } from 'lucide-react'
+import { ArrowLeft, Activity, Clock, Brain, Calculator, BookOpen, X, List } from 'lucide-react'
 import Link from 'next/link'
 import { useState, useMemo } from 'react'
 
@@ -10,6 +10,8 @@ export default function StatsPage() {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc') // asc = worst accuracy first
     const [selectedLetter, setSelectedLetter] = useState<string | null>(null)
     const [selectedWord, setSelectedWord] = useState<string | null>(null)
+    const [logFilter, setLogFilter] = useState<'all' | 'phonetics' | 'math' | 'words'>('all')
+    const [logLimit, setLogLimit] = useState(50)
 
     // Compute Phonetics
     const phoneticsData = useMemo(() => {
@@ -91,6 +93,11 @@ export default function StatsPage() {
             accuracy: s.attempts > 0 ? Math.round((s.correct / s.attempts) * 100) : 0
         }
     }, [selectedWord, stats.words?.items])
+
+    const filteredLog = useMemo(() => {
+        const log = [...(stats.quizLog || [])].reverse() // newest first
+        return logFilter === 'all' ? log : log.filter(e => e.type === logFilter)
+    }, [stats.quizLog, logFilter])
 
     return (
         <div className="min-h-screen bg-slate-900 text-slate-100 p-8">
@@ -269,6 +276,93 @@ export default function StatsPage() {
                             <div className="col-span-full text-center py-12 text-slate-500">
                                 No phonetics data collected yet.
                             </div>
+                        )}
+                    </div>
+                </section>
+
+                {/* Quiz Log */}
+                <section className="space-y-6">
+                    <div className="flex items-center justify-between flex-wrap gap-3">
+                        <h2 className="text-xl font-bold flex items-center gap-2">
+                            <List className="w-5 h-5 text-purple-400" /> Complete Quiz Log
+                        </h2>
+                        <div className="flex items-center bg-slate-800 rounded-lg p-1 border border-slate-700 gap-1">
+                            {(['all', 'phonetics', 'math', 'words'] as const).map(f => (
+                                <button
+                                    key={f}
+                                    onClick={() => { setLogFilter(f); setLogLimit(50) }}
+                                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors capitalize ${logFilter === f ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}
+                                >
+                                    {f}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
+                        {filteredLog.length === 0 ? (
+                            <div className="text-center py-12 text-slate-500">No quiz attempts recorded yet.</div>
+                        ) : (
+                            <>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="border-b border-slate-700 text-slate-400 text-xs uppercase tracking-wide">
+                                                <th className="text-left px-4 py-3 font-medium">Time</th>
+                                                <th className="text-left px-4 py-3 font-medium">Type</th>
+                                                <th className="text-left px-4 py-3 font-medium">Item</th>
+                                                <th className="text-left px-4 py-3 font-medium">Result</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filteredLog.slice(0, logLimit).map((entry, i) => {
+                                                const d = new Date(entry.timestamp)
+                                                const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                                                const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+                                                return (
+                                                    <tr key={i} className="border-b border-slate-700/50 last:border-0 hover:bg-slate-700/30 transition-colors">
+                                                        <td className="px-4 py-3 text-slate-400 whitespace-nowrap">
+                                                            <span className="text-slate-300">{dateStr}</span>
+                                                            <span className="text-slate-500 ml-2 text-xs">{timeStr}</span>
+                                                        </td>
+                                                        <td className="px-4 py-3">
+                                                            <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-bold capitalize ${
+                                                                entry.type === 'phonetics' ? 'bg-blue-500/20 text-blue-400' :
+                                                                entry.type === 'math' ? 'bg-orange-500/20 text-orange-400' :
+                                                                'bg-green-500/20 text-green-400'
+                                                            }`}>
+                                                                {entry.type}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-3 font-mono font-bold text-white capitalize">
+                                                            {entry.type === 'math'
+                                                                ? `Level ${entry.itemId.replace('math-diff-', '')}`
+                                                                : entry.itemId}
+                                                        </td>
+                                                        <td className="px-4 py-3">
+                                                            {entry.isCorrect ? (
+                                                                <span className="text-green-400 font-bold">✓ Correct</span>
+                                                            ) : (
+                                                                <span className="text-red-400 font-bold">✗ Wrong</span>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                )
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {filteredLog.length > logLimit && (
+                                    <div className="border-t border-slate-700 px-4 py-3 text-center">
+                                        <button
+                                            onClick={() => setLogLimit(l => l + 50)}
+                                            className="text-sm text-blue-400 hover:text-blue-300 font-medium transition-colors"
+                                        >
+                                            Show more ({filteredLog.length - logLimit} remaining)
+                                        </button>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </section>
