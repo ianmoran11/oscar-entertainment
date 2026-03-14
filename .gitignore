@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# libtool build artifact (symlink to local homebrew path, breaks Vercel)
+ltmain.sh

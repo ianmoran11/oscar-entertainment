@@ -43,7 +43,23 @@ mplementation Steps
 - [x] **Task 3:** Please make the text as large as possible on the quiz screen.
 - [x] **Task 4:** Remove the numbers quiz element.
 - [x] **Task 5:** Fix the number entry when selecting the interval for showing quizes. It's unusually and hard to input. Can you make it a more traditional android input.
+- [x] **Task 6:** Fix the following vercel build below (see ## References)
 
+
+
+## References 
+
+- Task 6 build error:
+	 error: 
+	> Build error occurred
+	Error: ENOENT: no such file or directory, stat '/vercel/path0/ltmain.sh'
+	    at ignore-listed frames {
+	  errno: -2,
+	  code: 'ENOENT',
+	  syscall: 'stat',
+	  path: '/vercel/path0/ltmain.sh'
+	}
+	Error: Command "npm run build" exited with 1
 
 
 
