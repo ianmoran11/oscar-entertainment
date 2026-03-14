@@ -42,7 +42,7 @@ mplementation Steps
 - [x] **Task 2:** In the word quiz, under each reponse option, add letters for each individual letter - e.g. DOG /n [D][O][G] - which, when pressed, plays the letter sound. I want this to help my son sound out each letter of the words that are presented as options.
 - [x] **Task 3:** Please make the text as large as possible on the quiz screen.
 - [x] **Task 4:** Remove the numbers quiz element.
-- [] **Task 5:** Fix the number entry when selecting the interval for showing quizes. It's unusually and hard to input. Can you make it a more traditional android input.  
+- [x] **Task 5:** Fix the number entry when selecting the interval for showing quizes. It's unusually and hard to input. Can you make it a more traditional android input.
 
 
 

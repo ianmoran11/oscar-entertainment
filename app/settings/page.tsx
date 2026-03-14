@@ -404,14 +404,17 @@ export default function SettingsPage() {
             {interruptionMode === 'time' && (
               <div className="flex flex-col gap-2">
                 <label className="text-sm text-slate-400">Minutes between Quizzes</label>
-                <input 
-                  type="number" 
-                  min="1"
-                  max="60"
-                  value={interruptionIntervalMinutes}
-                  onChange={(e) => updateSettings({ interruptionIntervalMinutes: parseInt(e.target.value) || 5 })}
-                  className="bg-slate-900 rounded-lg px-4 py-3 border border-slate-700"
-                />
+                <div className="flex items-center gap-0 bg-slate-900 rounded-lg border border-slate-700 overflow-hidden">
+                  <button
+                    onClick={() => updateSettings({ interruptionIntervalMinutes: Math.max(1, interruptionIntervalMinutes - 1) })}
+                    className="px-5 py-4 text-2xl font-bold text-slate-300 active:bg-slate-700 select-none"
+                  >−</button>
+                  <span className="flex-1 text-center text-2xl font-semibold py-4">{interruptionIntervalMinutes}</span>
+                  <button
+                    onClick={() => updateSettings({ interruptionIntervalMinutes: Math.min(60, interruptionIntervalMinutes + 1) })}
+                    className="px-5 py-4 text-2xl font-bold text-slate-300 active:bg-slate-700 select-none"
+                  >+</button>
+                </div>
               </div>
             )}
           </div>
