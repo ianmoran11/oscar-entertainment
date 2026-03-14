@@ -192,21 +192,37 @@ export function WordsQuiz({ onComplete, requiredCorrect, incorrectDelay, options
         {choices.map((word) => {
           const isCorrect = word.id === target.id
           const isIncorrectSelection = status === 'incorrect'
-          
+
           return (
-            <button
-              key={word.id}
-              onClick={() => handleChoice(word)}
-              disabled={status !== 'thinking'}
-              className={`
-                py-4 px-6 rounded-xl text-2xl font-bold transition-all transform relative overflow-hidden
-                bg-white border-4 shadow-md uppercase tracking-wide
-                ${status === 'correct' && isCorrect ? 'border-green-500 bg-green-50 text-green-600 scale-110' : ''}
-                ${isIncorrectSelection ? 'opacity-20 grayscale scale-95 border-slate-300 cursor-not-allowed' : 'hover:scale-105 border-slate-200 text-slate-700 hover:border-blue-400'}
-              `}
-            >
-              {word.word}
-            </button>
+            <div key={word.id} className="flex flex-col items-center gap-2">
+              <button
+                onClick={() => handleChoice(word)}
+                disabled={status !== 'thinking'}
+                className={`
+                  w-full py-4 px-6 rounded-xl text-2xl font-bold transition-all transform relative overflow-hidden
+                  bg-white border-4 shadow-md uppercase tracking-wide
+                  ${status === 'correct' && isCorrect ? 'border-green-500 bg-green-50 text-green-600 scale-110' : ''}
+                  ${isIncorrectSelection ? 'opacity-20 grayscale scale-95 border-slate-300 cursor-not-allowed' : 'hover:scale-105 border-slate-200 text-slate-700 hover:border-blue-400'}
+                `}
+              >
+                {word.word}
+              </button>
+              <div className="flex gap-1 flex-wrap justify-center">
+                {word.word.split('').map((letter, idx) => (
+                  <button
+                    key={idx}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      const soundPath = `/sounds/phonemes/${letter.toLowerCase()}.wav`
+                      playSound(soundPath)
+                    }}
+                    className="w-9 h-9 rounded-lg bg-slate-100 border-2 border-slate-300 text-slate-700 font-bold text-sm uppercase hover:bg-blue-100 hover:border-blue-400 active:scale-90 transition-all shadow-sm"
+                  >
+                    {letter.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
           )
         })}
       </div>

@@ -39,7 +39,7 @@ mplementation Steps
 *(Agent: Work through these sequentially. Check them off as you go.)*
 
 - [x] **Task 1:** Add a complete log of each quiz, answer and result in the statistics view
-- [ ] **Task 2:** In the word quiz, under each reponse option, add letters for each individual letter - e.g. DOG /n [D][O][G] - which, when pressed, plays the letter sound. I want this to help my son sound out each letter of the words that are presented as options. 
+- [x] **Task 2:** In the word quiz, under each reponse option, add letters for each individual letter - e.g. DOG /n [D][O][G] - which, when pressed, plays the letter sound. I want this to help my son sound out each letter of the words that are presented as options.
 
 
 
