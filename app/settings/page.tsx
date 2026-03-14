@@ -22,7 +22,6 @@ export default function SettingsPage() {
     interruptionMode,
     interruptionIntervalMinutes,
     enabledQuizTypes,
-    mathDifficulty,
     requiredCorrectAnswers,
     incorrectDelaySeconds,
     phoneticsOptionsCount,
@@ -168,7 +167,7 @@ export default function SettingsPage() {
     }
   }
 
-  const toggleQuizType = (type: 'phonetics' | 'math' | 'words') => {
+  const toggleQuizType = (type: 'phonetics' | 'words') => {
     if (enabledQuizTypes.includes(type)) {
       updateSettings({ enabledQuizTypes: enabledQuizTypes.filter(t => t !== type) })
     } else {
@@ -423,10 +422,10 @@ export default function SettingsPage() {
           <h2 className="text-xl font-semibold opacity-80">Quiz Content</h2>
           
           <div className="bg-slate-800 rounded-lg p-6 space-y-6 border border-slate-700">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
                <label className="flex items-center gap-3 bg-slate-900 p-4 rounded-lg cursor-pointer">
-                 <input 
-                   type="checkbox" 
+                 <input
+                   type="checkbox"
                    checked={enabledQuizTypes.includes('phonetics')}
                    onChange={() => toggleQuizType('phonetics')}
                    className="w-5 h-5 accent-blue-500"
@@ -434,17 +433,8 @@ export default function SettingsPage() {
                  <span>Phonetics</span>
                </label>
                <label className="flex items-center gap-3 bg-slate-900 p-4 rounded-lg cursor-pointer">
-                 <input 
-                   type="checkbox" 
-                   checked={enabledQuizTypes.includes('math')}
-                   onChange={() => toggleQuizType('math')}
-                   className="w-5 h-5 accent-blue-500"
-                 />
-                 <span>Math</span>
-               </label>
-               <label className="flex items-center gap-3 bg-slate-900 p-4 rounded-lg cursor-pointer">
-                 <input 
-                   type="checkbox" 
+                 <input
+                   type="checkbox"
                    checked={enabledQuizTypes.includes('words')}
                    onChange={() => toggleQuizType('words')}
                    className="w-5 h-5 accent-blue-500"
@@ -510,28 +500,6 @@ export default function SettingsPage() {
                 </div>
             </div>
 
-            {enabledQuizTypes.includes('math') && (
-              <div className="space-y-3 pt-4 border-t border-slate-700">
-                <label className="text-sm text-slate-400">Math Difficulty</label>
-                <div className="grid grid-cols-3 gap-3">
-                  {[1, 2, 3].map(level => (
-                    <button
-                      key={level}
-                      onClick={() => updateSettings({ mathDifficulty: level as 1|2|3 })}
-                      className={`py-2 rounded-lg text-sm border transition-all ${
-                        mathDifficulty === level 
-                          ? 'border-purple-500 bg-purple-500/20 text-purple-300' 
-                          : 'border-slate-700 text-slate-400 hover:bg-slate-700'
-                      }`}
-                    >
-                      {level === 1 && 'Numbers'}
-                      {level === 2 && 'Addition'}
-                      {level === 3 && 'Multiplication'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </section>
 

@@ -14,7 +14,7 @@ export type Playlist = {
     youtubePlaylistId?: string
 }
 
-export type QuizType = 'phonetics' | 'math' | 'words'
+export type QuizType = 'phonetics' | 'words'
 
 export type QuizItemStats = {
     attempts: number
@@ -45,12 +45,11 @@ export type QuizLogEntry = {
 interface StatsState {
     stats: {
         phonetics: QuizStats
-        math: QuizStats
         words: QuizStats
         usage: DailyUsage[]
         quizLog: QuizLogEntry[]
     }
-    recordQuizAttempt: (type: 'phonetics' | 'math' | 'words', itemId: string, isCorrect: boolean) => void
+    recordQuizAttempt: (type: 'phonetics' | 'words', itemId: string, isCorrect: boolean) => void
     recordWatchTime: (seconds: number) => void
 }
 
@@ -61,7 +60,6 @@ interface SettingsState {
   interruptionMode: 'time' | 'video_end'
   interruptionIntervalMinutes: number
   enabledQuizTypes: QuizType[]
-  mathDifficulty: 1 | 2 | 3 
   requiredCorrectAnswers: number
   incorrectDelaySeconds: number
   phoneticsOptionsCount: number
@@ -105,7 +103,6 @@ export const useStore = create<Store>()(
       // Defaults
       stats: {
           phonetics: { totalAttempts: 0, totalCorrect: 0, items: {} },
-          math: { totalAttempts: 0, totalCorrect: 0, items: {} },
           words: { totalAttempts: 0, totalCorrect: 0, items: {} },
           usage: [],
           quizLog: []
@@ -124,8 +121,7 @@ export const useStore = create<Store>()(
       
       interruptionMode: 'time',
       interruptionIntervalMinutes: 5,
-      enabledQuizTypes: ['phonetics', 'math', 'words'],
-      mathDifficulty: 1,
+      enabledQuizTypes: ['phonetics', 'words'],
       requiredCorrectAnswers: 1,
       incorrectDelaySeconds: 2,
       phoneticsOptionsCount: 2,
@@ -295,7 +291,7 @@ export const useStore = create<Store>()(
     }),
     {
       name: 'oscar-entertainment-storage',
-      version: 3,
+      version: 4,
       migrate: (persistedState: any, version: number) => {
           if (version === 0) {
               // Migration from simple video list to playlist
@@ -329,6 +325,13 @@ export const useStore = create<Store>()(
               }
               return { ...persistedState, stats }
           }
+          if (version === 3) {
+              // Migration to remove math quiz
+              const stats = { ...persistedState.stats }
+              delete stats.math
+              const enabledQuizTypes = (persistedState.enabledQuizTypes || []).filter((t: string) => t !== 'math')
+              return { ...persistedState, stats, enabledQuizTypes }
+          }
           return persistedState
       },
       partialize: (state) => ({
@@ -337,7 +340,6 @@ export const useStore = create<Store>()(
          interruptionMode: state.interruptionMode,
          interruptionIntervalMinutes: state.interruptionIntervalMinutes,
          enabledQuizTypes: state.enabledQuizTypes,
-         mathDifficulty: state.mathDifficulty,
          requiredCorrectAnswers: state.requiredCorrectAnswers,
          incorrectDelaySeconds: state.incorrectDelaySeconds,
          phoneticsOptionsCount: state.phoneticsOptionsCount,

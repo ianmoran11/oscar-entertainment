@@ -1,7 +1,7 @@
 'use client'
 
 import { useStore } from '@/store/useStore'
-import { ArrowLeft, Activity, Clock, Brain, Calculator, BookOpen, X, List } from 'lucide-react'
+import { ArrowLeft, Activity, Clock, Brain, BookOpen, X, List } from 'lucide-react'
 import Link from 'next/link'
 import { useState, useMemo } from 'react'
 
@@ -10,7 +10,7 @@ export default function StatsPage() {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc') // asc = worst accuracy first
     const [selectedLetter, setSelectedLetter] = useState<string | null>(null)
     const [selectedWord, setSelectedWord] = useState<string | null>(null)
-    const [logFilter, setLogFilter] = useState<'all' | 'phonetics' | 'math' | 'words'>('all')
+    const [logFilter, setLogFilter] = useState<'all' | 'phonetics' | 'words'>('all')
     const [logLimit, setLogLimit] = useState(50)
 
     // Compute Phonetics
@@ -113,7 +113,7 @@ export default function StatsPage() {
                 </header>
 
                 {/* Top Level Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-4 opacity-10">
                             <Clock size={100} />
@@ -135,21 +135,6 @@ export default function StatsPage() {
                         <div className="text-sm text-green-400 mt-1">
                             {stats.phonetics.totalAttempts > 0 
                                 ? Math.round((stats.phonetics.totalCorrect / stats.phonetics.totalAttempts) * 100) 
-                                : 0}% Accuracy
-                        </div>
-                    </div>
-
-                     <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 relative overflow-hidden">
-                         <div className="absolute top-0 right-0 p-4 opacity-10">
-                            <Calculator size={100} />
-                        </div>
-                        <h3 className="text-slate-400 font-medium mb-2">Math Attempts</h3>
-                        <div className="text-4xl font-bold">
-                            {stats.math.totalAttempts}
-                        </div>
-                         <div className="text-sm text-green-400 mt-1">
-                            {stats.math.totalAttempts > 0 
-                                ? Math.round((stats.math.totalCorrect / stats.math.totalAttempts) * 100) 
                                 : 0}% Accuracy
                         </div>
                     </div>
@@ -287,7 +272,7 @@ export default function StatsPage() {
                             <List className="w-5 h-5 text-purple-400" /> Complete Quiz Log
                         </h2>
                         <div className="flex items-center bg-slate-800 rounded-lg p-1 border border-slate-700 gap-1">
-                            {(['all', 'phonetics', 'math', 'words'] as const).map(f => (
+                            {(['all', 'phonetics', 'words'] as const).map(f => (
                                 <button
                                     key={f}
                                     onClick={() => { setLogFilter(f); setLogLimit(50) }}
@@ -328,16 +313,13 @@ export default function StatsPage() {
                                                         <td className="px-4 py-3">
                                                             <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-bold capitalize ${
                                                                 entry.type === 'phonetics' ? 'bg-blue-500/20 text-blue-400' :
-                                                                entry.type === 'math' ? 'bg-orange-500/20 text-orange-400' :
                                                                 'bg-green-500/20 text-green-400'
                                                             }`}>
                                                                 {entry.type}
                                                             </span>
                                                         </td>
                                                         <td className="px-4 py-3 font-mono font-bold text-white capitalize">
-                                                            {entry.type === 'math'
-                                                                ? `Level ${entry.itemId.replace('math-diff-', '')}`
-                                                                : entry.itemId}
+                                                            {entry.itemId}
                                                         </td>
                                                         <td className="px-4 py-3">
                                                             {entry.isCorrect ? (

@@ -2,17 +2,15 @@
 
 import { useStore } from '@/store/useStore'
 import { PhoneticsQuiz } from './quizzes/PhoneticsQuiz'
-import { MathQuiz } from './quizzes/MathQuiz'
 import { WordsQuiz } from './quizzes/WordsQuiz'
 import { useEffect, useState } from 'react'
 import { Lock } from 'lucide-react'
 
 export function QuizContainer() {
-  const { 
-    isInterrupted, 
-    setInterrupted, 
-    enabledQuizTypes, 
-    mathDifficulty,
+  const {
+    isInterrupted,
+    setInterrupted,
+    enabledQuizTypes,
     requiredCorrectAnswers,
     incorrectDelaySeconds,
     phoneticsOptionsCount,
@@ -21,7 +19,7 @@ export function QuizContainer() {
     recordQuizAttempt
   } = useStore()
 
-  const [activeQuiz, setActiveQuiz] = useState<'phonetics' | 'math' | 'words' | null>(null)
+  const [activeQuiz, setActiveQuiz] = useState<'phonetics' | 'words' | null>(null)
 
   // Select random quiz when interrupted
   useEffect(() => {
@@ -60,17 +58,6 @@ export function QuizContainer() {
         />
       )}
       
-      {activeQuiz === 'math' && (
-        <MathQuiz 
-          difficulty={mathDifficulty} 
-          onComplete={onComplete} 
-          requiredCorrect={requiredCorrectAnswers}
-          incorrectDelay={incorrectDelaySeconds}
-          volume={quizVolume}
-          onAnswer={(itemId, isCorrect) => recordQuizAttempt('math', itemId, isCorrect)}
-        />
-      )}
-
       {activeQuiz === 'words' && (
         <WordsQuiz 
           onComplete={onComplete} 
