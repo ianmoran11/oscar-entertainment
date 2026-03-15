@@ -45,6 +45,8 @@ mplementation Steps
 - [x] **Task 5:** Fix the number entry when selecting the interval for showing quizes. It's unusually and hard to input. Can you make it a more traditional android input.
 - [x] **Task 6:** Fix the following vercel build below (see ## References)
 - [x] **Task 7:** Can you change the sound associated with the letter buttons underneath the words in the in the word quiz so that "A" plays "a-short.wav","B" plays "b-short.wav",,"c" plays "c-short.wav",etc. (These sound files just play the phoneme - for example "ah" rather than "ah for apple".
+- [x] **Task 8:** This project was originally build on macos, then changed in a linux docker container. Can you make sure that it build for macos again to prevent this error in vercel: npm error notsup Unsupported platform for lightningcss-linux-arm64-gnu@1.32.0: wanted {"os":"linux","cpu":"arm64"} (current: {"os":"linux","cpu":"x64"})
+
 
 ## References 
 
