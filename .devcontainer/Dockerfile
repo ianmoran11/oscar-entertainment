@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     jq \
     tmux \
+    vim \
     sudo \
  && echo "node ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/node \
  && rm -rf /var/lib/apt/lists/*
