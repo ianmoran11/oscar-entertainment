@@ -11,6 +11,8 @@
   "dependencies": {
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
+    "lightningcss": "^1.32.0",
+    "lightningcss-linux-arm64-gnu": "^1.32.0",
     "lucide-react": "^0.562.0",
     "next": "16.1.1",
     "react": "19.2.3",

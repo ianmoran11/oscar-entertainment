@@ -213,8 +213,19 @@ export function WordsQuiz({ onComplete, requiredCorrect, incorrectDelay, options
                     key={idx}
                     onClick={(e) => {
                       e.stopPropagation()
-                      const soundPath = `/sounds/phonemes/${letter.toLowerCase()}.wav`
-                      playSound(soundPath)
+                      const l = letter.toLowerCase()
+                      const shortPath = `/sounds/short-sounds/${l}-short.wav`
+                      const fallbackPath = `/sounds/phonemes/${l}.wav`
+                      if (audioRef.current) {
+                        audioRef.current.volume = volume
+                        audioRef.current.src = shortPath
+                        audioRef.current.play().catch(() => {
+                          if (audioRef.current) {
+                            audioRef.current.src = fallbackPath
+                            audioRef.current.play().catch(err => console.error("Audio play failed", err))
+                          }
+                        })
+                      }
                     }}
                     className="w-12 h-12 rounded-lg bg-slate-100 border-2 border-slate-300 text-slate-700 font-bold text-xl uppercase hover:bg-blue-100 hover:border-blue-400 active:scale-90 transition-all shadow-sm"
                   >
